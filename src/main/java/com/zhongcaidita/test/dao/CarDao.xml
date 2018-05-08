@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhongcaidita.test.dao.CarDao">
+   
+	<sql id="carSql">
+	     		  carId,
+	     		  plateNumber,
+	     		  latitude,
+	     		  longitude,
+	     		  dataTimeGps,
+	     		  speedGps,
+	     		  mileage,
+	     		  altitude,
+	     		  northAngularSeparation,
+	     		  statusBit,
+	     		  addCarSignalStatusBit 
+	</sql>
+   <!-- 保存数据 -->
+   <insert id="save" parameterType="Car">
+     INSERT INTO car (<include refid="carSql"></include>)  VALUES
+	     <foreach collection="list" item="item" index= "index" separator =",">
+	    		(	null,	   
+			        #{item.plateNumber},
+			        #{item.latitude},
+			        #{item.longitude},
+			        #{item.dataTimeGps},
+			        #{item.speedGps},
+			        #{item.mileage},
+			        #{item.altitude},
+			        #{item.northAngularSeparation},
+			        #{item.statusBit},
+			        #{item.addCarSignalStatusBit}
+	    		)
+	    </foreach>
+   </insert> 
+   <select id="getPlateNumber" resultType="String">
+	   select distinct  plateNumber from car_brand;
+   </select>
+	<select id="AllDayDate" resultType="car" parameterType="Car">
+		select <include refid="carSql"/> from car_brand
+		  <where>
+			  <if test="plateNumber!=null and plateNUmber !=''">
+				  plateNumber = #{plateNumber}
+			  </if>
+			  order by carId ASC
+		  </where>
+	</select>
+
+	<select id="getPlateNumberCar" resultType="String">
+	   select distinct  plateNumber from car;
+   </select>
+	<select id="selectTimeByCar"  resultType="String">
+      SELECT DISTINCT DATE_FORMAT(dataTimeGps,"%Y-%m-%d") FROM car WHERE plateNumber=#{0} order by dataTimeGps;
+   </select>
+	<select id="OneDayDateCar" resultType="Car" parameterType="car">
+		select <include refid="carSql"/>
+		from car
+		<where>
+		<if test="plateNumber!=null and plateNumber !='' ">
+			plateNumber = #{plateNumber}
+		</if>
+		<if test="fromData !='' and fromData !=null">
+			and dataTimeGps between #{fromData}
+		</if>
+		<if test="fromEnd !='' and fromEnd !=null">
+			and #{fromEnd}
+		</if>
+		order by carId ASC;
+	</where>
+	</select>
+	<select id="selectOnlyInclude12" resultType="Car" parameterType="car">
+		select carId,dataTimeGps from car
+		<where>
+			<if test="plateNumber!=null and plateNumber !='' ">
+				plateNumber = #{plateNumber}
+			</if>
+			and dataTimeGps  like #{flagTime} order by carId
+		</where>
+	</select>
+	<select id="onlyDateNotInclude12" resultType="Car" >
+    select  carId,dataTimeGps from
+      (select  carId, dataTimeGps
+     		from car where plateNumber=#{0} and dataTimeGps like #{1} order by carId)A
+     			where dataTimeGps not like  #{2}  order by carId;
+   </select>
+	<insert id="save_brand" parameterType="Car">
+		INSERT INTO car_brand (<include refid="carSql"></include>)  VALUES
+		<foreach collection="list" item="item" index= "index" separator =",">
+			(#{item.carId},
+			#{item.plateNumber},
+			#{item.latitude},
+			#{item.longitude},
+			#{item.dataTimeGps},
+			#{item.speedGps},
+			#{item.mileage},
+			#{item.altitude},
+			#{item.northAngularSeparation},
+			#{item.statusBit},
+			#{item.addCarSignalStatusBit}
+			)
+		</foreach>
+	</insert>
+</mapper>
